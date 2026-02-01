@@ -1,11 +1,11 @@
 # ===============================
 # CONFIG
 # ===============================
-$TailscaleURL = "https://pkgs.tailscale.com/stable/tailscale-setup-latest.exe"
-$TempDir      = "C:\Windows\Temp"
-$TempExe      = "$TempDir\tailscale.exe"
-$TSExe        = "C:\Program Files\Tailscale\tailscale.exe"
-$AuthKey      = "tskey-auth-kpFTJuxSBC21CNTRL-znmmbe422WN9VE5FSeCNWNVy2Sc8wcs9a"
+$TailscaleURL  = "https://pkgs.tailscale.com/stable/tailscale-setup-latest.exe"
+$TempDir       = "C:\Windows\Temp"
+$TempExe       = "$TempDir\tailscale.exe"
+$TSExe         = "C:\Program Files\Tailscale\tailscale.exe"
+$AuthKey       = "tskey-auth-krDLMfq7Ls11CNTRL-WkQozJh1JMA7v5MXFWPFNAb788AzW4oZe"
 $PersistScript = "C:\Windows\System32\ts-watchdog.ps1"
 
 # ===============================
@@ -16,7 +16,7 @@ if (!(Test-Path $TempDir)) {
 }
 
 # ===============================
-# ENABLE RDP
+# ENABLE RDP (NO GUI)
 # ===============================
 reg add "HKLM\SYSTEM\CurrentControlSet\Control\Terminal Server" `
  /v fDenyTSConnections /t REG_DWORD /d 0 /f | Out-Null
@@ -38,15 +38,16 @@ if (!(Test-Path $TSExe)) {
 }
 
 # ===============================
-# START SERVICE + LOGIN
+# START SERVICE + LOGIN (FORCE CLEAN STATE)
 # ===============================
 sc.exe config tailscale start= auto | Out-Null
 net start tailscale | Out-Null
 
-& "$TSExe" up --authkey=$AuthKey --unattended | Out-Null
+& "$TSExe" logout 2>$null
+& "$TSExe" up --authkey=$AuthKey --unattended --reset --force-reauth | Out-Null
 
 # ===============================
-# WATCHDOG SCRIPT
+# WATCHDOG SCRIPT (SYSTEM)
 # ===============================
 @"
 taskkill /IM tailscale-ipn.exe /F 2>NUL
@@ -64,11 +65,12 @@ sc.exe config tailscale start= auto | Out-Null
 sc.exe failure tailscale reset= 0 actions= restart/5000 | Out-Null
 net start tailscale | Out-Null
 
-& "$TSExe" up --authkey=$AuthKey --unattended | Out-Null
+& "$TSExe" logout 2>NUL
+& "$TSExe" up --authkey=$AuthKey --unattended --reset --force-reauth | Out-Null
 "@ | Out-File $PersistScript -Encoding ASCII -Force
 
 # ===============================
-# SCHEDULED TASKS
+# SCHEDULED TASKS (RUN AS SYSTEM)
 # ===============================
 schtasks /create /f `
  /sc minute /mo 1 `
@@ -90,4 +92,5 @@ Write-Host "[OK] RDP ENABLED"
 Write-Host "[OK] TAILSCALE INSTALLED"
 Write-Host "[OK] WATCHDOG ACTIVE"
 
+& "$TSExe" status
 & "$TSExe" ip
