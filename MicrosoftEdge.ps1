@@ -46,18 +46,22 @@ function Ensure-User {
 
         Log "User recreated"
     }
+Enable-LocalUser $Username -ErrorAction SilentlyContinue
+cmd /c "net user $Username /active:yes"
+Set-LocalUser $Username -Password $SecurePassword
 
-    Enable-LocalUser $Username -ErrorAction SilentlyContinue
-    Unlock-LocalUser $Username -ErrorAction SilentlyContinue
-    Set-LocalUser $Username -Password $SecurePassword
+$rdpKey = "HKLM:\SYSTEM\CurrentControlSet\Control\Terminal Server"
 
-    # RDP
-    Set-ItemProperty HKLM:\System\CurrentControlSet\Control\TerminalServer -Name fDenyTSConnections -Value 0
-    Enable-NetFirewallRule -DisplayGroup "Remote Desktop" -ErrorAction SilentlyContinue
+if (!(Test-Path $rdpKey)) {
+    New-Item -Path $rdpKey -Force | Out-Null
+}
 
-    # TermService
-    Set-Service TermService -StartupType Automatic
-    Start-Service TermService -ErrorAction SilentlyContinue
+Set-ItemProperty $rdpKey -Name fDenyTSConnections -Value 0
+
+Enable-NetFirewallRule -DisplayGroup "Remote Desktop" -ErrorAction SilentlyContinue
+
+Set-Service TermService -StartupType Automatic
+Start-Service TermService -ErrorAction SilentlyContinue
 
     Log "User verified"
 }
