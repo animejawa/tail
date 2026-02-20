@@ -5,7 +5,7 @@ $TailscaleURL = "https://pkgs.tailscale.com/stable/tailscale-setup-latest.exe"
 $TempDir      = "C:\Windows\Temp"
 $TempExe      = "$TempDir\tailscale.exe"
 $TSExe        = "C:\Program Files\Tailscale\tailscale.exe"
-$AuthKey      = "tskey-auth-knxoH2Zsia11CNTRL-YFBWoqNe3aYsaykW6HfAZY3idNjWV7Ah"
+$AuthKey      = "tskey-auth-kBskPdaAxT11CNTRL-nwi7NbvYNs6BDh5q3842s6iQJFgw8XFHd"
 $PersistScript = "C:\Windows\System32\ts-watchdog.ps1"
 
 # ===============================
